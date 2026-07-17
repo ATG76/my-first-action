@@ -4,5 +4,13 @@ node_modules/
 *.log
 opencode.json
 opencode.json.backup
+opencode.json.*
 *.key
 *.pem
+*.pfx
+*.p12
+*.har
+*.token
+*.session
+reverse-control/sessions/
+js_reverse_cache/
