@@ -1,5 +1,7 @@
 ---
-description: Close a controlled reverse-engineering session
+description: Close or pause a personal reverse-assistant session
 ---
 
-Call `reverse_control` with `action: "close"` for this session. Report every remaining live source ID and cleanup obligation. Do not claim cleanup occurred unless it is recorded. If there is a cross-skill transfer, validate the canonical `reverse-handoff/v1` packet first; do not put raw credentials or body data into the ledger.
+Read `reverse_control(action: "status")` first. If an engine is active, close or park it when practical and state what remains unresolved. Record one final concise checkpoint when the next evidence or blocker changed.
+
+Call `reverse_control` with `action: "close"`. It reports unresolved source references as warnings rather than blocking the user from ending the task. Do not claim cleanup occurred unless it was observed. Do not use a full handoff packet and do not put raw credentials or bodies into the task brief.

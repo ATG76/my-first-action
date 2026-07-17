@@ -4,10 +4,11 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
 const SECRET_KEY = /(?:authorization|cookie|token|password|secret|api[_-]?key|raw(?:body)?|requestbody|responsebody)/i;
+const SECRET_VALUE = /(?:\bBearer\s+\S+|\b(?:gh[pousr]|github_pat)_[A-Za-z0-9_]{16,}|\bsk-[A-Za-z0-9_-]{16,}|\beyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|-----BEGIN [A-Z ]*PRIVATE KEY-----|[?&](?:access_?token|api_?key|authorization|cookie|password|secret|token)=[^&#\s]+)/i;
 
 export function defaultStateRoot() {
   const localAppData = process.env.LOCALAPPDATA || join(homedir(), "AppData", "Local");
-  return join(localAppData, "OpenCode", "reverse-control", "sessions");
+  return join(localAppData, "OpenCode", "reverse-assistant", "sessions");
 }
 
 function statePath(sessionID, root) {
@@ -15,12 +16,15 @@ function statePath(sessionID, root) {
 }
 
 function assertNoSensitiveKeys(value, path = "") {
+  if (typeof value === "string" && SECRET_VALUE.test(value)) {
+    throw new Error(`Reverse assistant state cannot persist a credential-like value at: ${path || "root"}`);
+  }
   if (!value || typeof value !== "object") return;
 
   for (const [key, child] of Object.entries(value)) {
     const childPath = path ? `${path}.${key}` : key;
-    if (key !== "authorizationBasis" && SECRET_KEY.test(key)) {
-      throw new Error(`Reverse control state cannot persist sensitive field: ${childPath}`);
+    if (SECRET_KEY.test(key)) {
+      throw new Error(`Reverse assistant state cannot persist sensitive field: ${childPath}`);
     }
     assertNoSensitiveKeys(child, childPath);
   }
@@ -29,26 +33,24 @@ function assertNoSensitiveKeys(value, path = "") {
 export function newDraftState(sessionID, projectRoot = null) {
   const now = new Date().toISOString();
   return {
-    version: 1,
+    version: 2,
     kind: "reverse-session",
     sessionID,
     projectRoot,
     status: "draft",
-    phase: "discover",
     ownerSkill: null,
     engine: "none",
     engineLifecycle: "inactive",
-    scope: {
-      authorizationBasis: "unknown",
-      allowedHostsAndRoutes: [],
-      actionClass: "other",
-      accountOrSessionUse: "unknown",
-      browserReconAllowed: "unknown",
-      liveReplayAllowed: "unknown",
-      requestBudget: null,
+    brief: {
+      goal: null,
+      deliverable: null,
+      provided: [],
+      verified: [],
+      hypotheses: [],
+      nextEvidence: null,
+      acceptance: null,
     },
     sourceIds: [],
-    obligations: [],
     confirmations: [],
     createdAt: now,
     updatedAt: now,
@@ -83,7 +85,10 @@ export async function saveState(state, root) {
 
 export async function ensureDraft(sessionID, projectRoot, root) {
   const current = await loadState(sessionID, root);
-  if (current) return current;
+  if (current) {
+    if (!current.projectRoot && projectRoot && current.kind === "reverse-session") return saveState({ ...current, projectRoot }, root);
+    return current;
+  }
   return saveState(newDraftState(sessionID, projectRoot), root);
 }
 
@@ -91,7 +96,7 @@ export async function registerChildSession(sessionID, parentSessionID, root) {
   const now = new Date().toISOString();
   return saveState(
     {
-      version: 1,
+      version: 2,
       kind: "reverse-child-link",
       sessionID,
       parentSessionID,

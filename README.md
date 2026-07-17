@@ -1,17 +1,42 @@
-# OpenCode Reverse Control Plane
+# OpenCode Personal Reverse Assistant
 
-Session-scoped reverse-engineering control plugin for OpenCode.
+A lightweight session assistant for keeping OpenCode reverse-engineering work
+grounded in evidence and recoverable after long conversations.
 
 中文 Git/GitHub 操作、部署和故障处理说明见
 [Git 与 GitHub 操作手册](docs/github-operations-zh.md)。
 
+个人逆向助手的工作流、设计依据和明确不做的事情见
+[个人逆向助手工作流](docs/personal-reverse-assistant-zh.md)。
+
+## Purpose
+
+This project helps an AI keep a reverse task on track when the user can only
+provide a URL, a broad outcome, or an incomplete suspicion about a protection.
+It records a short task brief with user-provided details, verified evidence,
+working hypotheses, the next evidence, and the acceptance condition.
+
+It does not try to make the user predict API hosts, challenge hosts, request
+budgets, cookies, or account policies before discovery begins.
+
 ## Included
 
 - Reverse engine leases
-- Monotonic handoff checks
 - Browser tool restrictions for child sessions
 - Source lifecycle tracking
+- Compact evidence-oriented task briefs
+- Official OpenCode compaction-context injection
+- On-demand confirmation for an authenticated session or other user-approved action
+- Credential-shaped state rejection
 - Offline tests
+
+## Deliberately Excluded
+
+- Host or route allowlists
+- Request budgets, delay policies, and concurrency policies
+- Mandatory multi-field handoff packets
+- GitHub synchronization for live task state
+- A new primary reverse agent or additional browser MCP
 
 ## Repository Boundary
 
@@ -42,6 +67,17 @@ powershell -ExecutionPolicy Bypass -File scripts\deploy.ps1 -WhatIf
 
 Restart OpenCode after deployment. The plugin and commands are loaded only at
 startup.
+
+## Personal Workflow
+
+Start a task with `/reverse-start` and free-form text. The user may leave
+technical details unknown. The assistant selects an initial owner skill and
+engine, then calls `reverse_control.start` with a compact brief before browser
+work. It checkpoints only after meaningful evidence or a direction change.
+
+The assistant should ask before using an authenticated session, sending a
+mutation, or performing another user-sensitive action. It should not ask for
+network host lists or request budgets at intake.
 
 ## Verification Scope
 

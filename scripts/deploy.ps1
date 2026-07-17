@@ -44,6 +44,15 @@ $destinationDirectory = Join-Path $OpenCodeHome "reverse-control"
 New-Item -ItemType Directory -Force -Path $destinationDirectory -WhatIf:$WhatIf | Out-Null
 Copy-Item -Recurse -Force -Path (Join-Path $sourceDirectory "*") -Destination $destinationDirectory -WhatIf:$WhatIf
 
+$staleRuntimeFiles = @(
+  (Join-Path $destinationDirectory "handoff-schema.mjs")
+)
+foreach ($staleFile in $staleRuntimeFiles) {
+  if (Test-Path $staleFile) {
+    Remove-Item -Force -Path $staleFile -WhatIf:$WhatIf
+  }
+}
+
 if (-not $WhatIf) {
   Push-Location $OpenCodeHome
   try {
@@ -57,5 +66,5 @@ if (-not $WhatIf) {
 if ($WhatIf) {
   Write-Host "Deployment plan validated. No runtime files were changed."
 } else {
-  Write-Host "Reverse Control Plane deployed to $OpenCodeHome. Restart OpenCode before using /reverse-start."
+  Write-Host "Personal Reverse Assistant deployed to $OpenCodeHome. Restart OpenCode before using /reverse-start."
 }
