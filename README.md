@@ -2,6 +2,9 @@
 
 Session-scoped reverse-engineering control plugin for OpenCode.
 
+中文 Git/GitHub 操作、部署和故障处理说明见
+[Git 与 GitHub 操作手册](docs/github-operations-zh.md)。
+
 ## Included
 
 - Reverse engine leases
